@@ -1,0 +1,293 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh" lang="zh"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>连连看</title>
+<style type="text/css">
+body,h1,h2,h3,h4,h5,h6,hr,p,blockquote,dl,dt,dd,ul,ol,li,pre,form,fieldset,legend,button,input,textarea,th,td{margin: 0;padding: 0}
+body,table,tr,td,input,div{font-size: 13px;line-height: 24px}
+html{color: #000;overflow-y: scoll;overflow: -moz-scrollbars-vertical}
+#con{position: absolute;width: 755px;height: 360px;left: 50%;top: 50%;margin-left: -375px;margin-top: -180px}
+#con, .pic{background-color: #F8F8F8}
+.pic{width: 40px;height: 40px;position: absolute;background-size: 40px;border: 2px solid #F8F8F8}
+</style>
+<script language="javascript" src="js/jquery1.3.2.js"></script>	
+<script language="javascript">
+  var start = new Date();
+  var end;
+  var saitonosai = {
+    curObj: {
+      id: "cur",
+      bg: ""
+    },
+    lastObj: {
+      id: "last",
+      bg: ""
+    },
+    data: [],
+    config: {
+      attrName: "isHidden",
+      attrVal: "yes",
+      offset: 4,
+      width: 40,
+      height: 40,
+      rows: 8,
+      cols: 17,
+      pics: ["img/01.svg", "img/02.svg", "img/03.svg","img/04.svg","img/05.svg","img/06.svg","img/07.svg","img/08.svg"],
+      border: {
+        show: "2px solid #00ff66",
+        hide: "2px solid #F8F8F8"
+      }
+    },
+    init: function() {
+      this.data = [];
+      this.genData();
+      this.sortData();
+      this.getPos();
+      this.render();
+    },
+    genData: function() {
+      var bg = "";
+      for (var i = 0; i < parseInt(this.config.rows / 2); ++i) {
+        for (var j = 0; j < this.config.cols; ++j) {
+          bg = i == 0 || j == 0 || j == this.config.cols - 1 //|| i == parseInt(this.config.rows / 2) - 1 
+          ? "": "url(" + this.config.pics[parseInt(Math.random() * this.config.pics.length)] + ")";
+          this.data.push({
+            id: "",
+            bg: bg + "",
+            x: 0,
+            y: 0
+          });
+          this.data.push({
+            id: "",
+            bg: bg + "",
+            x: 0,
+            y: 0
+          });
+        }
+      }
+    },
+    sortData: function() {
+      this.data.sort(function() {
+        return Math.random() - 0.5;
+      });
+    },
+    getPos: function() {
+      var tX = 0,
+      tY = 0;
+      for (var i = this.data.length - 1; i >= 0; i--) {
+        tX = i % this.config.cols;
+        tY = parseInt(i / this.config.cols);
+        this.data[i].x = this.config.width * tX + this.config.offset * (tX + 1);
+        this.data[i].y = this.config.height * tY + this.config.offset * (tY + 1);
+      }
+    },
+    render: function() {
+      var x = 0,
+      y = 0;
+      for (var i = this.data.length - 1; i >= 0; i--) {
+        var p = document.createElement("div");
+        x = i % this.config.cols;
+        y = parseInt(i / this.config.cols);
+        p.className = "pic";
+        p.style.marginLeft = this.data[i].x + "px";
+        p.style.marginTop = this.data[i].y + "px";
+        p.style.background = this.data[i].bg;
+				p.style.backgroundSize = "40px";
+        p.id = "o_" + x + "_" + y;
+        this.data[i].id = p.id;
+        if (this.data[i].bg != "") {
+          var self = this;
+          p.onclick = function() {
+            this.style.border = self.config.border.show;
+            if (self.curObj.bg == "") {
+              self.curObj = {
+                id: this.id,
+                bg: this.style.background
+              };
+            } else if (self.curObj.bg == this.style.background && self.curObj.id != this.id && self.isLink($(this).attr("x"), $(this).attr("y"), $("#" + self.curObj.id).attr("x"), $("#" + self.curObj.id).attr("y"))) {
+              $("#" + this.id).fadeOut();
+              $("#" + self.curObj.id).fadeOut();
+              $("#" + this.id).attr(self.config.attrName, self.config.attrVal);
+              $("#" + self.curObj.id).attr(self.config.attrName, self.config.attrVal);
+              self.lastObj = {
+                id: "last",
+                bg: ""
+              };
+              self.curObj = {
+                id: "cur",
+                bg: ""
+              };
+            } else if (self.curObj.id != this.id) {
+              self.lastObj = self.curObj;
+              self.curObj = {
+                id: this.id,
+                bg: this.style.background
+              };
+              g(self.lastObj.id).style.border = self.config.border.hide;
+            }
+            if (self.success()) {
+              end = new Date();
+              alert("OK " + (end.getTime() - start.getTime()));
+            }
+          }
+        }
+        g("con").appendChild(p);
+        $("#" + p.id).attr("x", x);
+        $("#" + p.id).attr("y", y);
+        if (this.data[i].bg == "") {
+          $("#" + p.id).attr(this.config.attrName, this.config.attrVal);
+        }
+      }
+    },
+    success: function() {
+      for (var i = this.data.length - 1; i >= 0; i--) {
+        if ($("#" + this.data[i].id).attr(this.config.attrName) != this.config.attrVal) {
+          return false;
+        }
+      }
+      return true;
+    },
+    accessAble: function(x, y) {
+      if ($("#o_" + x + "_" + y).attr(this.config.attrName) == this.config.attrVal) {
+        return true;
+      }
+      return false;
+    },
+    isLink: function(x1, y1, x2, y2) {
+      var p1 = {
+        x: parseInt(x1),
+        y: parseInt(y1)
+      };
+      var p2 = {
+        x: parseInt(x2),
+        y: parseInt(y2)
+      };
+      if (this.isRowLink(p1, p2) || this.isColLink(p1, p2) || this.isOneCorLink(p1, p2) || this.isTwoCorLink(p1, p2) || this.isThrLink(p1, p2)) {
+        return true;
+      }
+      return false;
+    },
+    isRowLink: function(p1, p2) {
+      var t1 = 0,
+      t2 = 0;
+
+      if (p1.y != p2.y) {
+        return false;
+      }
+      if (parseInt(p1.x) > parseInt(p2.x)) {
+        t1 = parseInt(p1.x);
+        t2 = parseInt(p2.x);
+      } else {
+        t1 = parseInt(p2.x);
+        t2 = parseInt(p1.x);
+      }
+      if (t1 - t2 == 1) {
+        return true;
+      }
+      for (var i = t2 + 1; i < t1; ++i) {
+        if (!this.accessAble(i, p1.y)) {
+          return false;
+        }
+      }
+      return true;
+    },
+    isColLink: function(p1, p2) {
+      var t1 = 0,
+      t2 = 0;
+      if (p1.x != p2.x) {
+        return false;
+      }
+      if (parseInt(p1.y) > parseInt(p2.y)) {
+        t1 = parseInt(p1.y);
+        t2 = parseInt(p2.y);
+      } else {
+        t1 = parseInt(p2.y);
+        t2 = parseInt(p1.y);
+      }
+      if (t1 - t2 == 1) {
+        return true;
+      }
+      for (var i = t2 + 1; i < t1; ++i) {
+        if (!this.accessAble(p1.x, i)) {
+          return false;
+        }
+      }
+      return true;
+    },
+    isOneCorLink: function(p1, p2) {
+      var pc = {
+        x: 0,
+        y: 0
+      };
+      pc.x = p1.x;
+      pc.y = p2.y;
+      if (this.accessAble(pc.x, pc.y) && this.isColLink(p1, pc) && this.isRowLink(pc, p2)) {
+        return true;
+      }
+      pc.x = p2.x;
+      pc.y = p1.y;
+      if (this.accessAble(pc.x, pc.y) && this.isColLink(p2, pc) && this.isRowLink(pc, p1)) {
+        return true;
+      }
+      return false;
+    },
+    isTwoCorLink: function(p1, p2) {
+      var pa = {
+        x: 0,
+        y: 0
+      },
+      pb = {
+        x: 0,
+        y: 0
+      };
+      pa.x = p1.x;
+      pb.x = p2.x;
+      for (var i = 0; i < this.config.rows; ++i) {
+        pa.y = i;
+        pb.y = i;
+        if (this.accessAble(pa.x, pa.y) && this.accessAble(pb.x, pb.y) && this.isColLink(p1, pa) && this.isOneCorLink(pa, p2)) {
+          return true;
+        }
+      }
+      pa.y = p1.y;
+      pb.y = p2.y;
+      for (var i = 0; i < this.config.cols; ++i) {
+        pa.x = i;
+        pb.x = i;
+        if (this.accessAble(pa.x, pa.y) && this.accessAble(pb.x, pb.y) && this.isRowLink(p1, pa) && this.isOneCorLink(pa, p2)) {
+          return true;
+        }
+      }
+      return false;
+    },
+    isThrLink: function(p1, p2) {
+      var p = {
+        x: 0,
+        y: 0
+      };
+      for (var i = 0; i < this.config.cols; ++i) {
+        for (var j = 0; j < this.config.rows; ++j) {
+          p.x = i;
+          p.y = j;
+          if (this.accessAble(i, j) && (this.isOneCorLink(p, p1) || this.isTwoCorLink(p, p1)) && (this.isOneCorLink(p, p2) || this.isTwoCorLink(p, p2))) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+  }
+  function g(id) {
+    return document.getElementById(id);
+  }
+  $(document).ready(function() {
+    saitonosai.init();
+  });
+</script>
+</head>
+<body>	
+<div id="con">
+</div>
+<div style="text-align:center;">
+</div>
+</body>
+</html>
