@@ -91,7 +91,7 @@ html{color: #000;overflow-y: scoll;overflow: -moz-scrollbars-vertical}
         p.style.marginLeft = this.data[i].x + "px";
         p.style.marginTop = this.data[i].y + "px";
         p.style.background = this.data[i].bg;
-				p.style.backgroundSize = "40px";
+        p.style.backgroundSize = "40px";
         p.id = "o_" + x + "_" + y;
         this.data[i].id = p.id;
         if (this.data[i].bg != "") {
@@ -126,7 +126,8 @@ html{color: #000;overflow-y: scoll;overflow: -moz-scrollbars-vertical}
             }
             if (self.success()) {
               end = new Date();
-              alert("OK " + (end.getTime() - start.getTime()));
+              alert("结束。");
+              //alert("OK " + (end.getTime() - start.getTime()));
             }
           }
         }
